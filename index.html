@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Contacts</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .clay-effect {
+            background: #f0f0f0;
+            border-radius: 16px;
+            box-shadow: 8px 8px 16px #d1d1d1,
+                       -8px -8px 16px #ffffff;
+            transition: all 0.3s ease;
+        }
+        .clay-effect:active {
+            box-shadow: inset 4px 4px 8px #d1d1d1,
+                       inset -4px -4px 8px #ffffff;
+        }
+        .contact-card {
+            transition: transform 0.3s ease;
+        }
+        .contact-card:hover {
+            transform: scale(1.02);
+        }
+        .modal-content {
+            background: #f0f0f0;
+            border-radius: 20px;
+            box-shadow: 20px 20px 40px #cccccc,
+                       -20px -20px 40px #ffffff;
+        }
+        .custom-input {
+            background: #f0f0f0;
+            border: none;
+            box-shadow: inset 4px 4px 8px #d1d1d1,
+                       inset -4px -4px 8px #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <nav class="fixed w-full top-0 z-50 clay-effect bg-white">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="bi bi-people-fill text-2xl text-purple-600"></i>
+                <h1 class="text-xl font-bold text-gray-800">Social Contacts</h1>
+            </div>
+            <button onclick="showAddContact()" class="clay-effect p-2 rounded-full">
+                <i class="bi bi-plus-lg text-xl text-purple-600"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="max-w-3xl mx-auto px-4 pt-20 pb-4">
+        <div class="relative">
+            <input type="text" id="searchInput" placeholder="Search contacts..." 
+                   class="w-full p-4 rounded-2xl custom-input focus:outline-none">
+            <i class="bi bi-search absolute right-4 top-4 text-gray-400"></i>
+        </div>
+    </div>
+
+    <!-- Contact List -->
+    <div id="contactList" class="max-w-3xl mx-auto px-4 pb-24"></div>
+
+    <!-- Add Contact Modal -->
+    <div id="addContactModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="modal-content p-6 w-full max-w-md mx-4">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Add New Contact</h2>
+            <input type="text" id="nameInput" placeholder="Name" class="w-full p-3 mb-3 rounded-xl custom-input">
+            <input type="tel" id="phoneInput" placeholder="Phone Number" class="w-full p-3 mb-4 rounded-xl custom-input">
+            <div class="flex justify-end gap-3">
+                <button onclick="hideAddContact()" class="clay-effect px-6 py-2 rounded-xl text-gray-600">Cancel</button>
+                <button onclick="addContact()" class="clay-effect px-6 py-2 rounded-xl bg-purple-600 text-white">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let contacts = [];
+
+        window.onload = () => {
+            const savedContacts = localStorage.getItem('contacts');
+            if (savedContacts) {
+                contacts = JSON.parse(savedContacts);
+                renderContacts();
+            }
+        }
+
+        function showAddContact() {
+            document.getElementById('addContactModal').classList.remove('hidden');
+        }
+
+        function hideAddContact() {
+            document.getElementById('addContactModal').classList.add('hidden');
+            document.getElementById('nameInput').value = '';
+            document.getElementById('phoneInput').value = '';
+        }
+
+        function addContact() {
+            const name = document.getElementById('nameInput').value.trim();
+            const phone = document.getElementById('phoneInput').value.trim();
+
+            if (name && phone) {
+                contacts.push({ name, phone });
+                contacts.sort((a, b) => a.name.localeCompare(b.name));
+                localStorage.setItem('contacts', JSON.stringify(contacts));
+                renderContacts();
+                hideAddContact();
+            }
+        }
+
+        function deleteContact(index) {
+            if(confirm('Are you sure you want to delete this contact?')) {
+                contacts.splice(index, 1);
+                localStorage.setItem('contacts', JSON.stringify(contacts));
+                renderContacts();
+            }
+        }
+
+        function openWhatsApp(phone) {
+            window.open(`https://wa.me/${phone.replace(/\D/g,'')}`, '_blank');
+        }
+
+        function renderContacts() {
+            const contactList = document.getElementById('contactList');
+            contactList.innerHTML = contacts.map((contact, index) => `
+                <div class="clay-effect mb-4 p-4 contact-card">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full clay-effect flex items-center justify-center">
+                                <i class="bi bi-person-circle text-2xl text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">${contact.name}</h3>
+                                <p class="text-gray-600">${contact.phone}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="openWhatsApp('${contact.phone}')" class="clay-effect p-2 rounded-full">
+                                <i class="bi bi-whatsapp text-xl text-green-500"></i>
+                            </button>
+                            <a href="tel:${contact.phone}" class="clay-effect p-2 rounded-full">
+                                <i class="bi bi-telephone text-xl text-blue-500"></i>
+                            </a>
+                            <button onclick="deleteContact(${index})" class="clay-effect p-2 rounded-full">
+                                <i class="bi bi-trash text-xl text-red-500"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredContacts = contacts.filter(contact => 
+                contact.name.toLowerCase().includes(searchTerm) || 
+                contact.phone.includes(searchTerm)
+            );
+            
+            const contactList = document.getElementById('contactList');
+            contactList.innerHTML = filteredContacts.map((contact, index) => `
+                <div class="clay-effect mb-4 p-4 contact-card">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full clay-effect flex items-center justify-center">
+                                <i class="bi bi-person-circle text-2xl text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">${contact.name}</h3>
+                                <p class="text-gray-600">${contact.phone}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="openWhatsApp('${contact.phone}')" class="clay-effect p-2 rounded-full">
+                                <i class="bi bi-whatsapp text-xl text-green-500"></i>
+                            </button>
+                            <a href="tel:${contact.phone}" class="clay-effect p-2 rounded-full">
+                                <i class="bi bi-telephone text-xl text-blue-500"></i>
+                            </a>
+                            <button onclick="deleteContact(${index})" class="clay-effect p-2 rounded-full">
+                                <i class="bi bi-trash text-xl text-red-500"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
